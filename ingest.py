@@ -1,8 +1,14 @@
 import pandas as pd
 import json
+import numpy as np
 from pathlib import Path
 from utils import logger
 from config import CONFIG
+
+STANDARD_SCHEMA = [
+    "email", "first_name", "last_name", "phone", "region",
+    "registration_date", "opt_out", "source"
+]
 
 def ingest_website_csv(filepath: Path) -> pd.DataFrame:
     logger.info(f"Ingesting website CSV: {filepath}")
@@ -68,14 +74,32 @@ def ingest_erp_fixed_width(filepath: Path) -> pd.DataFrame:
     logger.info(f"  Ingested {len(df)} records from ERP")
     return df
 
+def align_schema(df: pd.DataFrame, source_name: str) -> pd.DataFrame:
+    """
+    Align a source DataFrame to the standard schema.
+    Missing columns are added as NaN. Extra columns are dropped.
+    """
+    for col in STANDARD_SCHEMA:
+        if col not in df.columns:
+            df[col] = np.nan
+    return df[STANDARD_SCHEMA].copy()
+
 def ingest_all_sources() -> pd.DataFrame:
     frames = []
+
     website_df = ingest_website_csv(CONFIG["input_dir"] / "website_customers.csv")
-    frames.append(website_df)
+    frames.append(align_schema(website_df, "website"))
+
     crm_df = ingest_crm_json(CONFIG["input_dir"] / "crm_export.json")
-    frames.append(crm_df)
+    frames.append(align_schema(crm_df, "crm"))
+
     erp_df = ingest_erp_fixed_width(CONFIG["input_dir"] / "erp_customers.txt")
-    frames.append(erp_df)
+    frames.append(align_schema(erp_df, "erp"))
+
     combined = pd.concat(frames, ignore_index=True)
     logger.info(f"Total records combined: {len(combined)}")
+    for source in combined["source"].unique():
+        count = (combined["source"] == source).sum()
+        logger.info(f"  {source}: {count} records")
+    
     return combined
