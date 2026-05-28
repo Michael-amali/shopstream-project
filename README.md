@@ -36,17 +36,11 @@ From the `python-labs` repo root:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-pip install -r my_pipeline/requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Run (after implementation)
 
 ```powershell
-python my_pipeline/pipeline.py
-```
-
-## Test
-
-```powershell
-pytest my_pipeline/tests
+python pipeline
 ```

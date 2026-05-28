@@ -68,6 +68,7 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["registration_date"] = pd.to_datetime(df["registration_date"], errors="coerce")
     if "opt_out" in df.columns:
         df["opt_out"] = df["opt_out"].astype("bool")
+        
     invalid_emails = (~df["email_valid"]).sum()
     null_regions = df["region"].isna().sum()
     logger.info(f"  Invalid emails: {invalid_emails}")
